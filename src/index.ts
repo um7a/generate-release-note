@@ -26,7 +26,7 @@ type categoriesType = categoryType[];
  */
 
 const addColorToLog = true;
-const logger = new Logger(Logger.static.INFO, addColorToLog);
+const logger = new Logger(Logger.static.DEBUG, addColorToLog);
 
 /*
  * Functions
@@ -137,7 +137,11 @@ const getCategories = (args: Arguments): categoriesType => {
   }
 
   const categories: categoriesType = [];
-  for (let valueIndex = 0; valueIndex < categoryOption.values.length; valueIndex++) {
+  for (
+    let valueIndex = 0;
+    valueIndex < categoryOption.values.length;
+    valueIndex++
+  ) {
     const value = categoryOption.values[valueIndex];
     if (typeof value === 'undefined') {
       continue;
@@ -219,7 +223,9 @@ export default function main() {
   logger.debug(`The release tag is "${releaseTag}".`);
 
   const categories = getCategories(args);
-  logger.debug(`The categories are "${JSON.stringify(categories, undefined, 2)}".`);
+  logger.debug(
+    `The categories are "${JSON.stringify(categories, undefined, 2)}".`,
+  );
 
   // Get the previous tag and the oldest commit.
   const previousTag = GitCommandWrapper.getPreviousTag(releaseTag);
@@ -241,24 +247,38 @@ export default function main() {
     if (typeof commit === 'undefined') {
       continue;
     }
-    logger.debug(`Find the category matches with the commit ${JSON.stringify(commit)}`);
+    logger.debug(
+      `Find the category matches with the commit ${JSON.stringify(commit)}`,
+    );
 
     let categoryIsFound = false;
     categories.forEach((category) => {
-      logger.debug(`Check the category ${JSON.stringify(category)} matches with the commit.`);
+      logger.debug(
+        `Check the category ${JSON.stringify(
+          category,
+        )} matches with the commit.`,
+      );
       // for (const prefixInCommit of commit.prefixes) {
-      for (let prefixIndex = 0; prefixIndex < commit.prefixes.length; prefixIndex++) {
+      for (
+        let prefixIndex = 0;
+        prefixIndex < commit.prefixes.length;
+        prefixIndex++
+      ) {
         const prefixInCommit = commit.prefixes[prefixIndex];
         if (
           !categoryIsFound
           && category.commitPrefixes.length !== 0
-          && /* Other Changes */ category.commitPrefixes.some(
+          /* Other Changes */ && category.commitPrefixes.some(
             (prefixInCategory) => prefixInCategory === prefixInCommit,
           )
         ) {
           category.commits.push(commit);
           categoryIsFound = true;
-          logger.debug(`The category ${JSON.stringify(categories)} matches with the commit.`);
+          logger.debug(
+            `The category ${JSON.stringify(
+              categories,
+            )} matches with the commit.`,
+          );
           break;
         }
       }
