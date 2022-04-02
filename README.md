@@ -1,6 +1,8 @@
 # generate-release-note
+![typescript](https://github.com/um7a/generate-release-note/actions/workflows/typescript.yml/badge.svg?branch=main)
 
-This npm package provides a utility to generate release notes from git tag.
+This npm package provides a utility to generate release notes from git tag.  
+You can see the actual release notes which created by this utility on the [Release](https://github.com/um7a/generate-release-note/releases) page of this repository.
 
 
 ## (Basic Usage) Create Release Notes for the Latest Tag
