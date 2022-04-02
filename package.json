@@ -1,6 +1,6 @@
 {
   "name": "generate-release-note",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "This npm package provides a utility to generate release note.",
   "main": "dist/index.js",
   "bin": {
