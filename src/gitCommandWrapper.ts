@@ -22,19 +22,25 @@ export class GitCommandWrapper {
   //
   // public
   //
-  static getLatestTag(): string {
+  static getLatestTag(logger?: Logger): string {
     // The output of "git tag" follows the format bellow.
     //
     //   v0.0.1\n
     //   v0.0.2\n
     //   v0.0.3\n
     //
-    const gitTagStdout = execSync('git tag').toString().replace(/\n$/, '');
+    const command = 'git tag';
+    logger?.debug(`Execute ${command}`);
+
+    const gitTagStdout = execSync(command).toString().replace(/\n$/, '');
+
     if (gitTagStdout.length === 0) {
       throw new Error('No tags are found.');
     }
 
     const tags = gitTagStdout.split('\n');
+
+    logger?.debug(`tags: "${tags.toString()}" (length: ${tags.length})`);
 
     const latestTag = tags[tags.length - 1];
     if (latestTag === undefined) {
@@ -43,19 +49,25 @@ export class GitCommandWrapper {
     return latestTag;
   }
 
-  static getPreviousTag(tag: string): string | undefined {
+  static getPreviousTag(tag: string, logger?: Logger): string | undefined {
     // The output of "git tag" follows the format bellow.
     //
     //   v0.0.1\n
     //   v0.0.2\n
     //   v0.0.3\n
     //
-    const gitTagStdout = execSync('git tag').toString().replace(/\n$/, '');
+    const command = 'git tag';
+    logger?.debug(`Execute ${command}`);
+
+    const gitTagStdout = execSync(command).toString().replace(/\n$/, '');
+
     if (gitTagStdout.length === 0) {
       throw new Error('No tags are found.');
     }
 
     const tags = gitTagStdout.split('\n');
+
+    logger?.debug(`tags: "${tags.toString()}" (length: ${tags.length})`);
 
     const tagIndex = tags.findIndex((candidateTag) => candidateTag === tag);
     if (tagIndex === -1) {

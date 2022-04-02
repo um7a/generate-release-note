@@ -130,7 +130,7 @@ const getReleaseTag = (args: Arguments): string => {
     logger.debug(
       'The value of -t --tag option was not found. Use the latest tag instead.',
     );
-    return GitCommandWrapper.getLatestTag();
+    return GitCommandWrapper.getLatestTag(logger);
   }
   return tagOption.values[0];
 };
@@ -284,7 +284,7 @@ export default function main() {
   );
 
   // Get the previous tag and the oldest commit.
-  const previousTag = GitCommandWrapper.getPreviousTag(releaseTag);
+  const previousTag = GitCommandWrapper.getPreviousTag(releaseTag, logger);
   logger.debug(`The previous tag is "${previousTag}".`);
 
   const firstCommit = GitCommandWrapper.getFirstCommit(logger);
