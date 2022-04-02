@@ -1,0 +1,55 @@
+name: Release
+
+# When tag '*.*.*' is pushed, run this job.
+on:
+  push:
+    tags:
+      - "*.*.*"
+jobs:
+  check-tag-version:
+    runs-on: ubuntu-latest
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16.x
+
+      - name: check tag name
+        run: test ${{ github.ref }} = `node -e "console.log(require('./package.json').version)"`
+
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Use Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16.x
+
+      - name: install dependencies
+        run: npm ci
+
+      - name: audit 
+        run: npm audit
+
+      - name: lint 
+        run: npm run lint 
+
+
+      - name: test
+        run: npm run test 
+
+      - name: build
+        run: npm run build
+
+     - name: publish to npm registry
+        run: npm publish
+        env:
+          NPM_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
