@@ -110,7 +110,9 @@ export class GitCommandWrapper {
       // Parse <short hash> from line.
       const idEndIndex = commitStr.indexOf(' ');
       if (idEndIndex === -1) {
-        throw new Error('Unexpected output of git log.');
+        throw new Error(
+          `Unexpected output of git log: ${commitStrs.toString()}`,
+        );
       }
       const hash = commitStr.substring(0, idEndIndex);
 
