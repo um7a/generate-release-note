@@ -3,13 +3,13 @@
  */
 
 // Builtin Modules
-import { exit } from 'process';
+import { exit } from "process";
 
 // External Modules
 // Internal Modules
-import { Arguments, ruleType, stringOptionType } from './arguments';
-import { GitCommandWrapper, commitType } from './gitCommandWrapper';
-import Logger from './logger';
+import { Arguments, ruleType, stringOptionType } from "./arguments";
+import { GitCommandWrapper, commitType } from "./gitCommandWrapper";
+import Logger from "./logger";
 
 /*
  * Types
@@ -35,29 +35,29 @@ const logger = new Logger(Logger.static.CRIT, addColorToLog);
 const parseArgs = (argv: string[]) => {
   const rules: ruleType[] = [
     {
-      shortKey: '-h',
-      longKey: '--help',
-      type: 'boolean',
-      description: 'Show help message.',
+      shortKey: "-h",
+      longKey: "--help",
+      type: "boolean",
+      description: "Show help message.",
     },
     {
-      shortKey: '-t',
-      longKey: '--tag',
-      type: 'string',
-      description: 'Release tag.',
+      shortKey: "-t",
+      longKey: "--tag",
+      type: "string",
+      description: "Release tag.",
     },
     {
-      shortKey: '-c',
-      longKey: '--category',
-      type: 'string',
+      shortKey: "-c",
+      longKey: "--category",
+      type: "string",
       description:
         'Category to put on the release note. The value should be the format "<Category Title>:<Commit Prefix>,<Commit Prefix>,..."',
     },
     {
-      shortKey: '-d',
-      longKey: '--debug',
-      type: 'boolean',
-      description: 'Enable debug logging.',
+      shortKey: "-d",
+      longKey: "--debug",
+      type: "boolean",
+      description: "Enable debug logging.",
     },
   ];
   return new Arguments(rules, argv);
@@ -65,18 +65,18 @@ const parseArgs = (argv: string[]) => {
 
 const isValidTagOption = (tagOption: stringOptionType): boolean => {
   if (!tagOption.found) {
-    logger.debug('-t --tag option was not found.');
+    logger.debug("-t --tag option was not found.");
     return true;
   }
   if (
-    typeof tagOption.values === 'undefined'
-    || tagOption.values.length === 0
+    typeof tagOption.values === "undefined" ||
+    tagOption.values.length === 0
   ) {
-    logger.error('Invalid args. -t --tag option should have <tag name>.');
+    logger.error("Invalid args. -t --tag option should have <tag name>.");
     return false;
   }
   if (tagOption.values.length > 1) {
-    logger.error('Invalid args. Multiple -t --tag option were found.');
+    logger.error("Invalid args. Multiple -t --tag option were found.");
     return false;
   }
   return true;
@@ -84,15 +84,15 @@ const isValidTagOption = (tagOption: stringOptionType): boolean => {
 
 const isValidCategoryOption = (categoryOption: stringOptionType): boolean => {
   if (!categoryOption.found) {
-    logger.debug('-c --category option was not found.');
+    logger.debug("-c --category option was not found.");
     return true;
   }
   if (
-    typeof categoryOption.values === 'undefined'
-    || categoryOption.values.length === 0
+    typeof categoryOption.values === "undefined" ||
+    categoryOption.values.length === 0
   ) {
     logger.error(
-      'Invalid args. -c --category option should have <category title>:<commit prefix>.',
+      "Invalid args. -c --category option should have <category title>:<commit prefix>."
     );
     return false;
   }
@@ -103,16 +103,16 @@ const validateArgs = (args: Arguments) => {
   const validateResult = { isValid: true, needHelp: false };
 
   // Check that -h --help exists.
-  validateResult.needHelp = args.getBoolean('help').found;
+  validateResult.needHelp = args.getBoolean("help").found;
 
   // Validate the value of -t --tag.
-  if (!isValidTagOption(args.getString('tag'))) {
+  if (!isValidTagOption(args.getString("tag"))) {
     validateResult.isValid = false;
     validateResult.needHelp = true;
   }
 
   // Validate the value of -c --category.
-  if (!isValidCategoryOption(args.getString('category'))) {
+  if (!isValidCategoryOption(args.getString("category"))) {
     validateResult.isValid = false;
     validateResult.needHelp = true;
   }
@@ -120,15 +120,15 @@ const validateArgs = (args: Arguments) => {
 };
 
 const getReleaseTag = (args: Arguments): string => {
-  const tagOption = args.getString('tag');
+  const tagOption = args.getString("tag");
   // If -t --tag option is not found, use the latest tag.
   if (
-    typeof tagOption.values === 'undefined'
-    || tagOption.values.length !== 1
-    || tagOption.values[0] === undefined
+    typeof tagOption.values === "undefined" ||
+    tagOption.values.length !== 1 ||
+    tagOption.values[0] === undefined
   ) {
     logger.debug(
-      'The value of -t --tag option was not found. Use the latest tag instead.',
+      "The value of -t --tag option was not found. Use the latest tag instead."
     );
     return GitCommandWrapper.getLatestTag();
   }
@@ -138,46 +138,46 @@ const getReleaseTag = (args: Arguments): string => {
 const getCategories = (args: Arguments): categoriesType => {
   const defaultCategories: categoriesType = [
     {
-      categoryTitle: 'Features',
-      commitPrefixes: ['feat'],
+      categoryTitle: "Features",
+      commitPrefixes: ["feat"],
       commits: [],
     },
     {
-      categoryTitle: 'Fixes',
-      commitPrefixes: ['fix'],
+      categoryTitle: "Fixes",
+      commitPrefixes: ["fix"],
       commits: [],
     },
     {
-      categoryTitle: 'Performances',
-      commitPrefixes: ['perf', 'performance'],
+      categoryTitle: "Performances",
+      commitPrefixes: ["perf", "performance"],
       commits: [],
     },
     {
-      categoryTitle: 'Refactoring',
-      commitPrefixes: ['refactor'],
+      categoryTitle: "Refactoring",
+      commitPrefixes: ["refactor"],
       commits: [],
     },
     {
-      categoryTitle: 'Dependencies',
-      commitPrefixes: ['dep', 'deps'],
+      categoryTitle: "Dependencies",
+      commitPrefixes: ["dep", "deps"],
       commits: [],
     },
     {
-      categoryTitle: 'Documents',
-      commitPrefixes: ['doc', 'docs'],
+      categoryTitle: "Documents",
+      commitPrefixes: ["doc", "docs"],
       commits: [],
     },
     {
-      categoryTitle: 'Other Changes',
+      categoryTitle: "Other Changes",
       commitPrefixes: [],
       commits: [],
     },
   ];
 
-  const categoryOption = args.getString('category');
-  if (typeof categoryOption.values === 'undefined') {
+  const categoryOption = args.getString("category");
+  if (typeof categoryOption.values === "undefined") {
     logger.debug(
-      'The value of -c --category option was not found. Use the default categories instead.',
+      "The value of -c --category option was not found. Use the default categories instead."
     );
     return defaultCategories;
   }
@@ -189,21 +189,21 @@ const getCategories = (args: Arguments): categoriesType => {
     valueIndex++
   ) {
     const value = categoryOption.values[valueIndex];
-    if (typeof value === 'undefined') {
+    if (typeof value === "undefined") {
       continue;
     }
     // The value of -c --category option follows the format bellow.
     //
     //   "<category title>:<commit prefix>,<commit prefix>,..."
     //
-    const categoryTitleEndIndex = value.indexOf(':');
+    const categoryTitleEndIndex = value.indexOf(":");
     if (categoryTitleEndIndex === -1) {
-      throw new Error('Invalid value of -c --category option.');
+      throw new Error("Invalid value of -c --category option.");
     }
     const categoryTitle = value.substring(0, categoryTitleEndIndex);
     const commitPrefixes = value
       .substring(categoryTitleEndIndex + 1)
-      .split(',');
+      .split(",");
 
     const commitsPerCategory: categoryType = {
       categoryTitle,
@@ -214,7 +214,7 @@ const getCategories = (args: Arguments): categoriesType => {
   }
   // The commits which does not match with any categories are assigned to Other Changes.
   const defaultCategory: categoryType = {
-    categoryTitle: 'Other Changes',
+    categoryTitle: "Other Changes",
     commitPrefixes: [],
     commits: [],
   };
@@ -222,7 +222,7 @@ const getCategories = (args: Arguments): categoriesType => {
 
   if (categories.length === 0) {
     logger.debug(
-      'Could not parse the value of -c --category option. Use the default categories instead.',
+      "Could not parse the value of -c --category option. Use the default categories instead."
     );
     return defaultCategories;
   }
@@ -231,8 +231,8 @@ const getCategories = (args: Arguments): categoriesType => {
 };
 
 const getDebugFlag = (args: Arguments): boolean => {
-  const debugOption = args.getBoolean('debug');
-  if (typeof debugOption.values === 'undefined') {
+  const debugOption = args.getBoolean("debug");
+  if (typeof debugOption.values === "undefined") {
     return false;
   }
 
@@ -253,7 +253,7 @@ const getDebugFlag = (args: Arguments): boolean => {
 
 export default function main() {
   // Parse arguments.
-  logger.debug('Parse arguments.');
+  logger.debug("Parse arguments.");
   const args = parseArgs(process.argv);
 
   const validateResult = validateArgs(args);
@@ -267,7 +267,7 @@ export default function main() {
     console.log(args.generateHelp());
     exit(0);
   }
-  logger.debug('Parsed arguments successfully.');
+  logger.debug("Parsed arguments successfully.");
 
   // Set debug log level
   if (getDebugFlag(args)) {
@@ -280,7 +280,7 @@ export default function main() {
 
   const categories = getCategories(args);
   logger.debug(
-    `The categories are "${JSON.stringify(categories, undefined, 2)}".`,
+    `The categories are "${JSON.stringify(categories, undefined, 2)}".`
   );
 
   // Get the previous tag and the oldest commit.
@@ -294,25 +294,29 @@ export default function main() {
   logger.debug(`"${startPoint}" is used for the start point of release note.`);
 
   // Get commits between the tags.
-  const commits = GitCommandWrapper.getCommitsBetween(startPoint, releaseTag);
+  const commits = GitCommandWrapper.getCommitsBetween(
+    startPoint,
+    releaseTag,
+    logger
+  );
   logger.debug(`The commits are "${JSON.stringify(commits, undefined, 2)}"`);
 
   // Sort into the categories.
   while (commits.length > 0) {
     const commit = commits.pop();
-    if (typeof commit === 'undefined') {
+    if (typeof commit === "undefined") {
       continue;
     }
     logger.debug(
-      `Find the category matches with the commit ${JSON.stringify(commit)}`,
+      `Find the category matches with the commit ${JSON.stringify(commit)}`
     );
 
     let categoryIsFound = false;
     categories.forEach((category) => {
       logger.debug(
         `Check the category ${JSON.stringify(
-          category,
-        )} matches with the commit.`,
+          category
+        )} matches with the commit.`
       );
       // for (const prefixInCommit of commit.prefixes) {
       for (
@@ -322,18 +326,18 @@ export default function main() {
       ) {
         const prefixInCommit = commit.prefixes[prefixIndex];
         if (
-          !categoryIsFound
-          && category.commitPrefixes.length !== 0
-          /* Other Changes */ && category.commitPrefixes.some(
-            (prefixInCategory) => prefixInCategory === prefixInCommit,
+          !categoryIsFound &&
+          category.commitPrefixes.length !== 0 &&
+          /* Other Changes */ category.commitPrefixes.some(
+            (prefixInCategory) => prefixInCategory === prefixInCommit
           )
         ) {
           category.commits.push(commit);
           categoryIsFound = true;
           logger.debug(
             `The category ${JSON.stringify(
-              categories,
-            )} matches with the commit.`,
+              categories
+            )} matches with the commit.`
           );
           break;
         }
@@ -342,7 +346,7 @@ export default function main() {
     if (!categoryIsFound) {
       // Other Changes
       const otherChanges = categories[categories.length - 1];
-      if (typeof otherChanges === 'undefined') {
+      if (typeof otherChanges === "undefined") {
         logger.error('Category "Other Changes" is not found.');
         exit(1);
       }
