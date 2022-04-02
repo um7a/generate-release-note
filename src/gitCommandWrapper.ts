@@ -2,7 +2,7 @@
  * Module Dependencies
  */
 // Builtin Modules
-import { execSync } from "child_process";
+import { execSync } from 'child_process';
 
 // External Modules
 // Internal Modules
@@ -28,12 +28,12 @@ export class GitCommandWrapper {
     //   v0.0.2\n
     //   v0.0.3\n
     //
-    const gitTagStdout = execSync("git tag").toString().replace(/\n$/, "");
+    const gitTagStdout = execSync('git tag').toString().replace(/\n$/, '');
     if (gitTagStdout.length === 0) {
-      throw new Error("No tags are found.");
+      throw new Error('No tags are found.');
     }
 
-    const tags = gitTagStdout.split("\n");
+    const tags = gitTagStdout.split('\n');
 
     const tagIndex = tags.findIndex((candidateTag) => candidateTag === tag);
     if (tagIndex === -1) {
@@ -51,13 +51,13 @@ export class GitCommandWrapper {
     //
     // So the following command show the short hash value of the oldest commit.
     const firstCommit = execSync(
-      'git log --reverse --pretty=format:"%h" | head -n 1'
+      'git log --reverse --pretty=format:"%h" | head -n 1',
     )
       .toString()
-      .replace(/\n$/, "");
+      .replace(/\n$/, '');
 
     if (firstCommit.length === 0) {
-      throw new Error("No commits are found.");
+      throw new Error('No commits are found.');
     }
 
     return firstCommit;
@@ -65,7 +65,7 @@ export class GitCommandWrapper {
 
   static getCommitsBetween(
     oldestTagOrCommit: string,
-    newestTagOrCommit: string
+    newestTagOrCommit: string,
   ): commitType[] {
     // The following command follows the format bellow.
     //
@@ -74,22 +74,22 @@ export class GitCommandWrapper {
     //   <short hash> <commit message>
     //
     const commitStrs = execSync(
-      `git log --pretty=format:"%h %s" ${oldestTagOrCommit}..${newestTagOrCommit}`
+      `git log --pretty=format:"%h %s" ${oldestTagOrCommit}..${newestTagOrCommit}`,
     )
       .toString()
-      .replace(/\n$/, "")
-      .split("\n");
+      .replace(/\n$/, '')
+      .split('\n');
 
     const commits: commitType[] = [];
     for (let commitIndex = 0; commitIndex < commitStrs.length; commitIndex++) {
       const commitStr = commitStrs[commitIndex];
-      if (typeof commitStr === "undefined") {
+      if (typeof commitStr === 'undefined') {
         continue;
       }
       // Parse <short hash> from line.
-      const idEndIndex = commitStr.indexOf(" ");
+      const idEndIndex = commitStr.indexOf(' ');
       if (idEndIndex === -1) {
-        throw new Error("Unexpected output of git log.");
+        throw new Error('Unexpected output of git log.');
       }
       const hash = commitStr.substring(0, idEndIndex);
 
@@ -98,12 +98,12 @@ export class GitCommandWrapper {
 
       // Parse prefix from <commit message>
       let prefixes: string[] = [];
-      const prefixAndMessage = rawMessage.split(": ");
+      const prefixAndMessage = rawMessage.split(': ');
       if (prefixAndMessage.length >= 2) {
         // Prefix exists.
         const prefix = prefixAndMessage[0];
-        if (typeof prefix !== "undefined") {
-          prefixes = prefix.split("/");
+        if (typeof prefix !== 'undefined') {
+          prefixes = prefix.split('/');
         }
       }
       const commit: commitType = { hash, prefixes, rawMessage };
