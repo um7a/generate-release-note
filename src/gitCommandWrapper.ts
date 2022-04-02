@@ -7,7 +7,7 @@ import { execSync } from "child_process";
 // External Modules
 // Internal Modules
 
-export type commit = {
+export type commitType = {
   hash: string;
   prefixes: string[];
   rawMessage: string;
@@ -66,7 +66,7 @@ export class GitCommandWrapper {
   static getCommitsBetween(
     oldestTagOrCommit: string,
     newestTagOrCommit: string
-  ): commit[] {
+  ): commitType[] {
     // The following command follows the format bellow.
     //
     //   <short hash> <commit message>
@@ -80,8 +80,12 @@ export class GitCommandWrapper {
       .replace(/\n$/, "")
       .split("\n");
 
-    const commits: commit[] = [];
-    for (const commitStr of commitStrs) {
+    const commits: commitType[] = [];
+    for (let commitIndex = 0; commitIndex < commitStrs.length; commitIndex++) {
+      const commitStr = commitStrs[commitIndex];
+      if (typeof commitStr === "undefined") {
+        continue;
+      }
       // Parse <short hash> from line.
       const idEndIndex = commitStr.indexOf(" ");
       if (idEndIndex === -1) {
@@ -102,7 +106,7 @@ export class GitCommandWrapper {
           prefixes = prefix.split("/");
         }
       }
-      const commit: commit = { hash, prefixes, rawMessage };
+      const commit: commitType = { hash, prefixes, rawMessage };
       commits.push(commit);
     }
     return commits;

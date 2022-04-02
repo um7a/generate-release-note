@@ -1,57 +1,41 @@
-type optionPosition = {
+type optionPositionType = {
   found: boolean;
   positions: number[];
 };
-type option = {
-  found: boolean;
-  rule: rule | undefined;
-  values: (string | number | boolean)[] | undefined;
+
+export type ruleType = {
+  shortKey: string;
+  longKey: string;
+  type: 'number' | 'string' | 'boolean';
+  description: string;
 };
-export type stringOption = {
+
+export type stringOptionType = {
   found: boolean;
-  rule: rule | undefined;
+  rule: ruleType | undefined;
   values: string[] | undefined;
 };
-type numberOption = {
+export type numberOptionType = {
   found: boolean;
-  rule: rule | undefined;
+  rule: ruleType | undefined;
   values: number[] | undefined;
 };
-type booleanOption = {
+export type booleanOptionType = {
   found: boolean;
-  rule: rule | undefined;
+  rule: ruleType | undefined;
   values: boolean[] | undefined;
 };
-type truncatedKey = {
+type truncatedKeyType = {
   nTruncated: number;
   original: string;
   truncated: string;
 };
-export type rule = {
-  shortKey: string;
-  longKey: string;
-  type: "number" | "string" | "boolean";
-  description: string;
-};
 
-let debugEnabled = false;
-//debugEnabled = true;
-
-const debug = (tag: string, msg: string): void => {
-  if (debugEnabled) {
-    process.stdout.write("debug");
-    process.stdout.write(" ");
-    process.stdout.write(tag);
-    process.stdout.write(" ");
-    console.log(msg);
-  }
-};
-
-const getTruncatedKey = (original: string): truncatedKey => {
+const getTruncatedKey = (original: string): truncatedKeyType => {
   let truncated = original;
   let nTruncated = 0;
-  while (truncated.startsWith("-")) {
-    nTruncated += 1;
+  while (truncated.startsWith('-')) {
+    nTruncated++;
     truncated = truncated.substring(1);
   }
   return { nTruncated, original, truncated };
@@ -62,29 +46,24 @@ export class Arguments {
   // private
   //
   #argv: string[];
-  #rules: rule[];
 
-  getRule(key: string): { found: boolean; rule: rule | undefined } {
-    const debugTag = "Arguments.#getRule";
+  #rules: ruleType[];
 
+  #getRule(key: string): { found: boolean; rule: ruleType | undefined } {
     const truncatedKey = getTruncatedKey(key);
-    if (truncatedKey.truncated.length <= 0) {
-      debug(
-        debugTag,
-        `Invalid key: '${key}'. The length of truncated key is ${truncatedKey.truncated.length}.`
-      );
-    }
     const isShortKey = truncatedKey.truncated.length === 1;
 
-    for (const rule of this.#rules) {
+    for (let i = 0; i < this.#rules.length; i++) {
+      const rule = this.#rules[i];
+      if (typeof rule === 'undefined') {
+        continue;
+      }
       if (isShortKey) {
         if (truncatedKey.truncated === rule.shortKey) {
           return { found: true, rule };
         }
-      } else {
-        if (truncatedKey.truncated === rule.longKey) {
-          return { found: true, rule };
-        }
+      } else if (truncatedKey.truncated === rule.longKey) {
+        return { found: true, rule };
       }
     }
     return { found: false, rule: undefined };
@@ -99,10 +78,9 @@ export class Arguments {
    *     (3) "--<multiple characters>"
    *     (4) "--<multiple characters> <value>"
    * @param {string} key - The key you want to find.
-   * @returns { optionPosition } - The position of the option in #argv.
+   * @returns { optionPositionType } - The position of the option in #argv.
    */
-  #getOptionPosition(rule: rule): optionPosition {
-    const debugTag = "Arguments.#getOptionPosition";
+  #getOptionPosition(rule: ruleType): optionPositionType {
     const notFoundPosition = {
       found: false,
       positions: [],
@@ -110,10 +88,9 @@ export class Arguments {
 
     // Find option using rule
     const positions: number[] = [];
-    for (let i = 0; i < this.#argv.length; i += 1) {
+    for (let i = 0; i < this.#argv.length; i++) {
       const candidateKey = this.#argv[i];
-      if (candidateKey === null || typeof candidateKey === "undefined") {
-        debug(debugTag, "The element of #argv is null or undefined. continue.");
+      if (candidateKey === null || typeof candidateKey === 'undefined') {
         continue;
       }
 
@@ -122,33 +99,28 @@ export class Arguments {
 
       // If the candidate is not option, stop checking and continue.
       if (truncatedCandidateKey.truncated.length <= 0) {
-        debug(debugTag, `#argv[${i}] is not an option (only '-'). continue.`);
         continue;
       }
       if (candidateIsShortKey && truncatedCandidateKey.nTruncated !== 1) {
-        debug(debugTag, `#argv[${i}] is not an option (no '-'). continue.`);
         continue;
       }
       if (!candidateIsShortKey && truncatedCandidateKey.nTruncated !== 2) {
-        debug(debugTag, `#argv[${i}] is not an option (no '--'). continue.`);
         continue;
       }
 
       if (candidateIsShortKey) {
-        if (typeof rule === "undefined") {
+        if (typeof rule === 'undefined') {
           throw new Error(
-            `rule.rule is undefined. But it must not be undefined because rule.found is true.`
+            'rule.rule is undefined. But it must not be undefined because rule.found is true.',
           );
         }
         if (truncatedCandidateKey.truncated === rule.shortKey) {
-          debug(debugTag, "Position of the target short key is found.");
           positions.push(i);
           continue;
         }
       }
 
       if (truncatedCandidateKey.truncated === rule.longKey) {
-        debug(debugTag, "Position of the target long key is found.");
         positions.push(i);
         continue;
       }
@@ -156,103 +128,51 @@ export class Arguments {
     if (positions.length > 0) {
       return { found: true, positions };
     }
-    debug(debugTag, "Position of the target key is not found.");
     return notFoundPosition;
   }
 
-  #get(key: string): option {
-    const debugTag = "Arguments.#get";
-    const notFoundOption: option = {
+  #get(key: string): stringOptionType {
+    const notFoundOption: stringOptionType = {
       found: false,
       rule: undefined,
       values: undefined,
     };
-
-    const keyLength = getTruncatedKey(key).truncated.length;
-    const rule = this.getRule(key);
+    const rule = this.#getRule(key);
     if (!rule.found) {
-      debug(debugTag, `Rule of the ${key} is not found.`);
       return notFoundOption;
     }
-    if (typeof rule.rule === "undefined") {
+    if (typeof rule.rule === 'undefined') {
       throw new Error(
-        `rule.rule is undefined. But it must not be undefined because rule.found is true.`
+        'rule.rule is undefined. But it must not be undefined because rule.found is true.',
       );
     }
 
     const optionPosition = this.#getOptionPosition(rule.rule);
     if (!optionPosition.found) {
-      debug(debugTag, `The key is not found.`);
       return notFoundOption;
     }
-    if (typeof optionPosition.positions === "undefined") {
+    if (typeof optionPosition.positions === 'undefined') {
       throw new Error(
-        `optionPosition.position is undefined. But it must not be undefined because optionPosition.found is true.`
+        'optionPosition.position is undefined. But it must not be undefined because optionPosition.found is true.',
       );
     }
-
-    const values: (string | number | boolean)[] = [];
-    for (const position of optionPosition.positions) {
+    const values: string[] = [];
+    for (let i = 0; i < optionPosition.positions.length; i++) {
+      const position = optionPosition.positions[i];
+      if (typeof position === 'undefined') {
+        continue;
+      }
       const value = this.#argv[position + 1];
-
       // The key is the last of argv.
       if (value === undefined) {
-        debug(debugTag, `The key is found. But its value is not found.`);
-        if (rule.rule.type === "boolean") {
-          debug(debugTag, `Treat as true.`);
-          values.push(true);
-        }
         continue;
       }
-      debug(debugTag, `The key and value are found.`);
 
-      // Check value can be parsed as boolean.
-      if (rule.rule.type === "boolean") {
-        if (value.match(/[tT]rue/)) {
-          debug(
-            debugTag,
-            `The boolean option ${key} is found with ${value}. Treat as true.`
-          );
-          values.push(true);
-          continue;
-        }
-        if (value.match(/[fF]alse/)) {
-          debug(
-            debugTag,
-            `The boolean option ${key} is found with ${value}. Treat as false.`
-          );
-          values.push(false);
-          continue;
-        }
-        debug(
-          debugTag,
-          `The boolean option ${key} is found with ${value}. This value is not accepted as the value of boolean option. Treat as the value is not found (treat as true).`
-        );
-        values.push(true);
+      // Check value is not next option key.
+      if (value.startsWith('-')) {
         continue;
       }
-      if (rule.rule.type === "number") {
-        // Check value can be parsed as number.
-        if (!Number.isNaN(Number.parseInt(value))) {
-          debug(debugTag, `The number option ${key} is found with ${value}.`);
-          values.push(Number.parseInt(value));
-        }
-
-        if (!Number.isNaN(Number.parseFloat(value))) {
-          debug(debugTag, `The number option ${key} is found with ${value}.`);
-          values.push(Number.parseFloat(value));
-        }
-        debug(
-          debugTag,
-          `The number option ${key} is found with ${value}. This value is not accepted as the value of number option. Skip processing.`
-        );
-        continue;
-      }
-      if (rule.rule.type === "string") {
-        debug(debugTag, `The string option ${key} is found with ${value}.`);
-        values.push(value);
-        continue;
-      }
+      values.push(value);
     }
     // The value is treated as string.
     return {
@@ -265,12 +185,14 @@ export class Arguments {
   //
   // public
   //
-  constructor(rules: rule[], argv: string[]) {
-    const debugTag = "Arguments.constructor";
-
+  constructor(rules: ruleType[], argv: string[]) {
     // Deep copy rules to this.#rules.
     this.#rules = [];
-    for (const rule of rules) {
+    for (let i = 0; i < rules.length; i++) {
+      const rule = rules[i];
+      if (typeof rule === 'undefined') {
+        continue;
+      }
       const ruleCopy = {
         shortKey: rule.shortKey,
         longKey: rule.longKey,
@@ -280,24 +202,37 @@ export class Arguments {
       // truncate shortKey
       const truncatedShortKey = getTruncatedKey(ruleCopy.shortKey);
       if (
-        truncatedShortKey.nTruncated !== 1 &&
-        truncatedShortKey.nTruncated !== 0
+        truncatedShortKey.nTruncated !== 1
+        && truncatedShortKey.nTruncated !== 0
       ) {
         throw new Error(
-          `Invalid rule. shortKey is invalid format: '${ruleCopy.shortKey}'.`
+          `Invalid rule. shortKey is invalid format: '${ruleCopy.shortKey}'.`,
         );
       }
+      if (truncatedShortKey.truncated.length !== 1) {
+        throw new Error(
+          `Invalid rule. shortKey is invalid format: '${ruleCopy.shortKey}'.`,
+        );
+      }
+
       ruleCopy.shortKey = truncatedShortKey.truncated;
+
       // truncate longKey
       const truncatedLongKey = getTruncatedKey(ruleCopy.longKey);
       if (
-        truncatedLongKey.nTruncated !== 2 &&
-        truncatedShortKey.nTruncated !== 0
+        truncatedLongKey.nTruncated !== 2
+        && truncatedShortKey.nTruncated !== 0
       ) {
         throw new Error(
-          `Invalid rule. longKey is invalid format: '${ruleCopy.longKey}'.`
+          `Invalid rule. longKey is invalid format: '${ruleCopy.longKey}'.`,
         );
       }
+      if (truncatedLongKey.truncated.length < 2) {
+        throw new Error(
+          `Invalid rule. longKey is invalid format: '${ruleCopy.longKey}'.`,
+        );
+      }
+
       ruleCopy.longKey = truncatedLongKey.truncated;
 
       this.#rules.push(ruleCopy);
@@ -307,9 +242,8 @@ export class Arguments {
     this.#argv = Array.from(argv);
   }
 
-  getBoolean(key: string): booleanOption {
-    const debugTag = "Arguments.getBoolean";
-    const returnOption: booleanOption = {
+  getBoolean(key: string): booleanOptionType {
+    const returnOption: booleanOptionType = {
       found: false,
       rule: undefined,
       values: undefined,
@@ -318,76 +252,49 @@ export class Arguments {
     const option = this.#get(key);
     // Option does not exists.
     if (option.found === false) {
-      debug(debugTag, `The boolean option ${key} is not found.`);
       return returnOption;
     }
-    if (typeof option.rule === "undefined") {
+    if (typeof option.rule === 'undefined') {
       throw new Error(
-        `option.rule is undefined. But it must not be undefined because option.found is true.`
+        'option.rule is undefined. But it must not be undefined because option.found is true.',
       );
     }
-    returnOption.found = true;
+    returnOption.found = option.found;
     returnOption.rule = option.rule;
 
-    // Option exists, but value does not exists.
+    // Option exists, but its value does not exists.
     // I treat this case as true.
-    if (option.values === undefined) {
-      debug(debugTag, `The boolean option ${key} is found without values.`);
+    if (option.values === undefined || option.values.length === 0) {
+      returnOption.values = [true];
       return returnOption;
     }
 
     returnOption.values = [];
-    for (const value of option.values) {
-      if (typeof value !== "boolean") {
-        throw new Error(`Unexpected value of boolean option: ${value}`);
+    for (let i = 0; i < option.values.length; i++) {
+      const value = option.values[i];
+      if (typeof value === 'undefined') {
+        continue;
       }
-      returnOption.values.push(value);
+      if (value.match(/[tT]rue/)) {
+        returnOption.values.push(true);
+        continue;
+      }
+      if (value.match(/[fF]alse/)) {
+        returnOption.values.push(false);
+        continue;
+      }
+      // Treat Non boolean string as no value. So treat as true.
+      returnOption.values.push(true);
     }
     return returnOption;
   }
 
-  getString(key: string): stringOption {
-    const debugTag = "Arguments.getString";
-    const returnOption: stringOption = {
-      found: false,
-      rule: undefined,
-      values: undefined,
-    };
-
-    const option = this.#get(key);
-    // Option does not exists.
-    if (option.found === false) {
-      debug(debugTag, `The string option ${key} is not found.`);
-      return returnOption;
-    }
-    if (typeof option.rule === "undefined") {
-      throw new Error(
-        `option.rule is undefined. But it must not be undefined because option.found is true.`
-      );
-    }
-    returnOption.found = true;
-    returnOption.rule = option.rule;
-
-    // Option exists, but value does not exists.
-    // I treat this case as true.
-    if (option.values === undefined) {
-      debug(debugTag, `The string option ${key} is found without values.`);
-      return returnOption;
-    }
-
-    returnOption.values = [];
-    for (const value of option.values) {
-      if (typeof value !== "string") {
-        throw new Error(`Unexpected value of string option: ${value}`);
-      }
-      returnOption.values.push(value);
-    }
-    return returnOption;
+  getString(key: string): stringOptionType {
+    return this.#get(key);
   }
 
-  getNumber(key: string): numberOption {
-    const debugTag = "Arguments.getNumber";
-    const returnOption: numberOption = {
+  getNumber(key: string): numberOptionType {
+    const returnOption: numberOptionType = {
       found: false,
       rule: undefined,
       values: undefined,
@@ -396,36 +303,42 @@ export class Arguments {
     const option = this.#get(key);
     // Option does not exists.
     if (option.found === false) {
-      debug(debugTag, `The number option ${key} is not found.`);
       return returnOption;
     }
-    if (typeof option.rule === "undefined") {
+    if (typeof option.rule === 'undefined') {
       throw new Error(
-        `option.rule is undefined. But it must not be undefined because option.found is true.`
+        'option.rule is undefined. But it must not be undefined because option.found is true.',
       );
     }
     returnOption.found = true;
     returnOption.rule = option.rule;
 
-    // Option exists, but value does not exists.
-    // I treat this case as true.
+    // Option exists, but its value does not exists.
     if (option.values === undefined) {
-      debug(debugTag, `The number option ${key} is found without values.`);
       return returnOption;
     }
 
     returnOption.values = [];
-    for (const value of option.values) {
-      if (typeof value !== "number") {
-        throw new Error(`Unexpected value of number option: ${value}`);
+    for (let i = 0; i < option.values.length; i++) {
+      const value = option.values[i];
+      if (typeof value !== 'string') {
+        continue;
       }
-      returnOption.values.push(value);
+      // Check value can be parsed as number.
+      if (!Number.isNaN(Number.parseInt(value, 10))) {
+        returnOption.values.push(Number.parseInt(value, 10));
+        continue;
+      }
+      if (!Number.isNaN(Number.parseFloat(value))) {
+        returnOption.values.push(Number.parseFloat(value));
+        continue;
+      }
     }
     return returnOption;
   }
 
   generateHelp(): string {
-    let help = "\nUsage: \n";
+    let help = '\nUsage: \n';
 
     let maxLineLen = 0;
     const optionLines: {
@@ -450,10 +363,14 @@ export class Arguments {
       });
     }
 
-    for (const optionLine of optionLines) {
+    for (let lineIndex = 0; lineIndex < optionLines.length; lineIndex++) {
+      const optionLine = optionLines[lineIndex];
+      if (typeof optionLine === 'undefined') {
+        continue;
+      }
       help += optionLine.line;
       for (let i = 0; i < maxLineLen - optionLine.line.length; i++) {
-        help += " ";
+        help += ' ';
       }
 
       help += ` : ${optionLine.description}\n`;
