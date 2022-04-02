@@ -21,6 +21,27 @@ export class GitCommandWrapper {
   //
   // public
   //
+  static getLatestTag(): string {
+    // The output of "git tag" follows the format bellow.
+    //
+    //   v0.0.1\n
+    //   v0.0.2\n
+    //   v0.0.3\n
+    //
+    const gitTagStdout = execSync('git tag').toString().replace(/\n$/, '');
+    if (gitTagStdout.length === 0) {
+      throw new Error('No tags are found.');
+    }
+
+    const tags = gitTagStdout.split('\n');
+
+    const latestTag = tags[tags.length - 1];
+    if (latestTag === undefined) {
+      throw new Error('Failed to parse the output of git tag.');
+    }
+    return latestTag;
+  }
+
   static getPreviousTag(tag: string): string | undefined {
     // The output of "git tag" follows the format bellow.
     //

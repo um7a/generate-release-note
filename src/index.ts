@@ -65,16 +65,18 @@ const parseArgs = (argv: string[]) => {
 
 const isValidTagOption = (tagOption: stringOptionType): boolean => {
   if (!tagOption.found) {
-    logger.debug('Invalid args. -t --tag option ware not found.');
-    return false;
+    logger.debug('-t --tag option was not found.');
+    return true;
   }
   if (
     typeof tagOption.values === 'undefined'
-    || tagOption.values.length !== 1
+    || tagOption.values.length === 0
   ) {
-    logger.debug(
-      'Invalid args. None or multiple values of -t --tag option ware found.',
-    );
+    logger.error('Invalid args. -t --tag option should have <tag name>.');
+    return false;
+  }
+  if (tagOption.values.length > 1) {
+    logger.error('Invalid args. Multiple -t --tag option were found.');
     return false;
   }
   return true;
@@ -82,12 +84,15 @@ const isValidTagOption = (tagOption: stringOptionType): boolean => {
 
 const isValidCategoryOption = (categoryOption: stringOptionType): boolean => {
   if (!categoryOption.found) {
-    logger.debug('Invalid args. -c --category option ware not found.');
-    return false;
+    logger.debug('-c --category option was not found.');
+    return true;
   }
-  if (typeof categoryOption.values === 'undefined') {
-    logger.debug(
-      'Invalid args. values of -c --category option ware not found.',
+  if (
+    typeof categoryOption.values === 'undefined'
+    || categoryOption.values.length === 0
+  ) {
+    logger.error(
+      'Invalid args. -c --category option should have <category title>:<commit prefix>.',
     );
     return false;
   }
@@ -116,24 +121,65 @@ const validateArgs = (args: Arguments) => {
 
 const getReleaseTag = (args: Arguments): string => {
   const tagOption = args.getString('tag');
+  // If -t --tag option is not found, use the latest tag.
   if (
     typeof tagOption.values === 'undefined'
     || tagOption.values.length !== 1
+    || tagOption.values[0] === undefined
   ) {
-    throw new Error('Failed to get the values of -t --tag option.');
+    logger.debug(
+      'The value of -t --tag option was not found. Use the latest tag instead.',
+    );
+    return GitCommandWrapper.getLatestTag();
   }
-
-  const releaseTag = tagOption.values[0];
-  if (releaseTag === undefined) {
-    throw new Error('The value of -t --tag option is undefined.');
-  }
-  return releaseTag;
+  return tagOption.values[0];
 };
 
 const getCategories = (args: Arguments): categoriesType => {
+  const defaultCategories: categoriesType = [
+    {
+      categoryTitle: 'Features',
+      commitPrefixes: ['feat'],
+      commits: [],
+    },
+    {
+      categoryTitle: 'Fixes',
+      commitPrefixes: ['fix'],
+      commits: [],
+    },
+    {
+      categoryTitle: 'Performances',
+      commitPrefixes: ['perf', 'performance'],
+      commits: [],
+    },
+    {
+      categoryTitle: 'Refactoring',
+      commitPrefixes: ['refactor'],
+      commits: [],
+    },
+    {
+      categoryTitle: 'Dependencies',
+      commitPrefixes: ['dep', 'deps'],
+      commits: [],
+    },
+    {
+      categoryTitle: 'Documents',
+      commitPrefixes: ['doc', 'docs'],
+      commits: [],
+    },
+    {
+      categoryTitle: 'Other Changes',
+      commitPrefixes: [],
+      commits: [],
+    },
+  ];
+
   const categoryOption = args.getString('category');
   if (typeof categoryOption.values === 'undefined') {
-    throw new Error('Failed to get the values of -c --category option.');
+    logger.debug(
+      'The value of -c --category option was not found. Use the default categories instead.',
+    );
+    return defaultCategories;
   }
 
   const categories: categoriesType = [];
@@ -174,6 +220,13 @@ const getCategories = (args: Arguments): categoriesType => {
   };
   categories.push(defaultCategory);
 
+  if (categories.length === 0) {
+    logger.debug(
+      'Could not parse the value of -c --category option. Use the default categories instead.',
+    );
+    return defaultCategories;
+  }
+
   return categories;
 };
 
@@ -199,11 +252,12 @@ const getDebugFlag = (args: Arguments): boolean => {
  */
 
 export default function main() {
+  // Parse arguments.
   logger.debug('Parse arguments.');
   const args = parseArgs(process.argv);
 
   const validateResult = validateArgs(args);
-  if (validateResult.needHelp && !validateResult.isValid) {
+  if (!validateResult.isValid) {
     // eslint-disable-next-line no-console
     console.log(args.generateHelp());
     exit(1);
@@ -215,10 +269,12 @@ export default function main() {
   }
   logger.debug('Parsed arguments successfully.');
 
+  // Set debug log level
   if (getDebugFlag(args)) {
     logger.setLogLevel(Logger.static.DEBUG);
   }
 
+  // Get the end point of release notes.
   const releaseTag = getReleaseTag(args);
   logger.debug(`The release tag is "${releaseTag}".`);
 
