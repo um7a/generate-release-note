@@ -23,7 +23,6 @@ jobs:
   build:
     needs: check-tag-version
     runs-on: ubuntu-latest
-    strategy:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
