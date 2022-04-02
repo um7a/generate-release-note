@@ -67,19 +67,27 @@ export class GitCommandWrapper {
     return previousTag;
   }
 
-  static getFirstCommit(): string {
+  static getFirstCommit(logger?: Logger): string {
     // --reverse            : Show tags from oldest first.
     // --pretty=format:"%h" : Show only short hash value of tags.
     //
     // So the following command show the short hash value of the oldest commit.
-    const firstCommit = execSync(
-      'git log --reverse --pretty=format:"%h" | head -n 1',
-    )
-      .toString()
-      .replace(/\n$/, '');
+    const command = 'git log --reverse --pretty=format:"%h"';
+    logger?.debug(`Execute ${command}`);
 
-    if (firstCommit.length === 0) {
+    const commits = execSync(command).toString().replace(/\n$/, '').split('\n');
+
+    logger?.debug(
+      `All commits: "${commits.toString()}" (length: ${commits.length})`,
+    );
+
+    if (commits.length === 0) {
       throw new Error('No commits are found.');
+    }
+
+    const firstCommit = commits[0];
+    if (typeof firstCommit === 'undefined') {
+      throw new Error('Failed to parse the first commit.');
     }
 
     return firstCommit;

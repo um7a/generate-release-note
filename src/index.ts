@@ -287,7 +287,7 @@ export default function main() {
   const previousTag = GitCommandWrapper.getPreviousTag(releaseTag);
   logger.debug(`The previous tag is "${previousTag}".`);
 
-  const firstCommit = GitCommandWrapper.getFirstCommit();
+  const firstCommit = GitCommandWrapper.getFirstCommit(logger);
   logger.debug(`The first commit of the git repository is "${firstCommit}".`);
 
   const startPoint = previousTag || firstCommit;
