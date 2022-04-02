@@ -21,6 +21,7 @@ jobs:
         run: test ${{ github.ref }} = `node -e "console.log(require('./package.json').version)"`
 
   build:
+    needs: check-tag-version
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -37,20 +38,19 @@ jobs:
       - name: install dependencies
         run: npm ci
 
-      - name: audit 
+      - name: audit
         run: npm audit
 
-      - name: lint 
-        run: npm run lint 
-
+      - name: lint
+        run: npm run lint
 
       - name: test
-        run: npm run test 
+        run: npm run test
 
       - name: build
         run: npm run build
 
-     - name: publish to npm registry
+      - name: publish to npm registry
         run: npm publish
         env:
           NPM_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
