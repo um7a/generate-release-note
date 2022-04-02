@@ -18,7 +18,7 @@ jobs:
           node-version: 16.x
 
       - name: check tag name
-        run: test ${{ github.ref }} = `node -e "console.log(require('./package.json').version)"`
+        run: test `echo ${{ github.ref }} | cut -d / -f 3`  = `node -e "console.log(require('./package.json').version)"`
 
   build:
     needs: check-tag-version
