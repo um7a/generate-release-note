@@ -45,8 +45,8 @@ You can customize the title and prefixes using `-c`, `--category` option.
 
 The format of the option value is
 ```
-$ npx generate-release-note -t <Category Title>:<commit Prefix>
+$ npx generate-release-note -c <Category Title>:<commit Prefix>
 # or
-$ npx generate-release-note -t <Category Title>:<commit Prefix>,<commit Prefix>, ...
+$ npx generate-release-note -c <Category Title>:<commit Prefix>,<commit Prefix>, ...
 ```
 You can set multiple `-c`, `--category` option.  
