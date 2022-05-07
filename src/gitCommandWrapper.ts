@@ -29,7 +29,7 @@ export class GitCommandWrapper {
     //   v0.0.2\n
     //   v0.0.3\n
     //
-    const command = 'git tag';
+    const command = 'git tag --sort=v:refname';
     logger?.debug(`Execute ${command}`);
 
     const gitTagStdout = execSync(command).toString().replace(/\n$/, '');
@@ -56,7 +56,7 @@ export class GitCommandWrapper {
     //   v0.0.2\n
     //   v0.0.3\n
     //
-    const command = 'git tag';
+    const command = 'git tag --sort=v:refname';
     logger?.debug(`Execute ${command}`);
 
     const gitTagStdout = execSync(command).toString().replace(/\n$/, '');
