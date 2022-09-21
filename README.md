@@ -1,5 +1,5 @@
 # generate-release-note
-![typescript](https://github.com/um7a/generate-release-note/actions/workflows/typescript.yml/badge.svg?branch=main)
+![nodejs](https://github.com/um7a/generate-release-note/actions/workflows/nodejs.yml/badge.svg?branch=main)
 ![daily_build](https://github.com/um7a/generate-release-note/actions/workflows/daily_build.yml/badge.svg?branch=main)
 
 This npm package provides a utility to generate release notes from git tag.  
