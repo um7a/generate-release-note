@@ -37,12 +37,15 @@ jobs:
       - name: Use jq
         run: sudo apt -y install jq
 
-      - name: Create Release
+      - name: Create Release Note
         run: |
-          tag_name=$(echo ${{ github.ref }} | cut -d / -f 3)
           npm install -g generate-release-note
-          npx generate-release-note > ./release_note
+          generate-release-note > ./release_note
+
+      - name: Create Github Release
+        run: |
           release_body=$(sed -z 's/\n/\\n/g' ./release_note)
+          tag_name=$(echo ${{ github.ref }} | cut -d / -f 3)
           echo "{ \"tag_name\": \"$tag_name\", \"body\": \"$release_body\" }" > ./request_body
           curl \
           $GITHUB_API_URL/repos/$GITHUB_REPOSITORY/releases \
