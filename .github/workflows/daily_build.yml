@@ -33,7 +33,9 @@ jobs:
           cache: "npm"
 
       - name: Configure git
-        run: git config --global user.name "github actions"
+        run: |
+          git config --global user.name "github actions"
+          git config --global user.email "um7a@users.noreply.github.com"
 
       - name: Update npm packages
         if: ${{ matrix.node-version == '20.x' }}
