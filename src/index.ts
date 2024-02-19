@@ -168,6 +168,11 @@ const getCategories = (args: Arguments): categoriesType => {
       commits: [],
     },
     {
+      categoryTitle: 'Build',
+      commitPrefixes: ['build'],
+      commits: [],
+    },
+    {
       categoryTitle: 'Other Changes',
       commitPrefixes: [],
       commits: [],

@@ -67,6 +67,7 @@ By default, this utility check the following commit prefix and put the following
 | Refactoring | `refactor` |
 | Dependencies | `dep`, `deps` |
 | Documents | `doc`, `docs` |
+| Build | `build` |
 | Other Changes | Other commit prefixes. |
 
 You can customize the title and prefixes using `-c`, `--category` option.
